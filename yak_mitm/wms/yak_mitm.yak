@@ -1,0 +1,96 @@
+# mitm plugin template
+
+yakit_output(MITM_PARAMS)
+users = MITM_PARAMS["users"]
+users = str.Split(users,",")
+fuzzurl = MITM_PARAMS["fuzzurl"]
+urlparam = MITM_PARAMS["urlparam"]
+jsonparam = MITM_PARAMS["jsonparam"]
+urlparams = str.Split(urlparam,"=")
+jsonparams = str.Split(jsonparam,"=")
+
+
+
+hijackHTTPRequest = func(isHttps, url, req, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
+    tokens = []
+    if str.Contains(string(req), "/wms/") {
+        if str.Contains(string(req),"logincheck"){
+            yakit_output("test start=================")
+            res1, err := fuzz.HTTPRequest(req,fuzz.https(isHttps))
+            // res1.FuzzFormEncoded("username",users).Show()
+            res2,err2 := res1.FuzzFormEncoded("username",users).Exec()
+            die(err2)
+            
+            for element := range res2 {
+                printf("status: %3d bodylen: %7d  url: %v\n", element.Response.StatusCode, len(element.ResponseRaw), element.Url)
+                res3,err3 = str.ExtractBodyFromHTTPResponseRaw(element.ResponseRaw)
+                // res4 = json.loads(string(res3))
+                token = re.FindAll(string(res3), "token\":\".*?\"")
+                token = token[0]
+                token = token[8:len(token)-1]
+                tokens = append(tokens,token)
+                
+            }
+            print(tokens)
+            os.Setenv("tokens",json.dumps(tokens))   
+            
+        }else{
+            res4, err4 := fuzz.HTTPRequest(req,fuzz.https(isHttps))
+            die(err4)
+            tt = os.Getenv("tokens")
+            tt = json.loads(tt)
+            if tt != nil {
+                // res4.FuzzHTTPHeader("token",tt).Show()
+                if fuzzurl == "url" {
+                    //当不输入指定的url时，只重放put\post请求
+                    // drop() //掉弃原请求。不掉弃，不好观察，因为yakit后台日志没记录原始请求。
+                    if (str.Contains(string(req), "POST") || str.Contains(string(req), "PUT")){
+                        res5,err5 = res4.FuzzHTTPHeader("token",tt).Exec()
+                        die(err5)
+                    }
+                }else{
+                    if str.Contains(string(req), fuzzurl){
+                        drop() //掉弃原请求。不掉弃，不好观察，因为yakit后台日志没记录原始请求。
+                        if (urlparam != "a=[1,2]" && jsonparam !="a=[1,2]") {
+                            print("11111111111111111111111111111111111111111111111111111111111 \n")
+                            res5,err5 = res4.FuzzHTTPHeader("token",tt).FuzzGetParams(urlparams[0],json.loads(urlparams[1])).FuzzPostJsonParams(jsonparams[0],json.loads(jsonparams[1])).Exec()
+                            die(err5)
+                        }
+                        if urlparam != "a=[1,2]" && jsonparam =="a=[1,2]"  {
+                            print("2222222222222222222222222222222222222222222222222222222222 \n")
+                            // res4.FuzzHTTPHeader("token",tt).FuzzGetParams(urlparams[0],json.loads(urlparams[1])).Show()
+                            res5,err5 = res4.FuzzHTTPHeader("token",tt).FuzzGetParams(urlparams[0],json.loads(urlparams[1])).Exec()
+                            die(err5)
+                        }
+                        if jsonparam != "a=[1,2]" && urlparam == "a=[1,2]" {
+                            print("333333333333333333333333333333333333333333333333333333333 \n")
+                            // res4.FuzzHTTPHeader("token",tt).FuzzPostJsonParams(jsonparams[0],json.loads(jsonparams[1])).Show()
+                            res5,err5 = res4.FuzzHTTPHeader("token",tt).FuzzPostJsonParams(jsonparams[0],json.loads(jsonparams[1])).Exec()
+                            die(err5)
+                        }
+                        if jsonparam == "a=[1,2]" && urlparam == "a=[1,2]" {
+                            res5,err5 = res4.FuzzHTTPHeader("token",tt).Exec()
+                            die(err5)
+                        }
+                    }
+                    
+                }
+                if res5 !=nil {
+                    for element := range res5 {
+                        printf("status: %3d bodylen: %7d  url: %v\n", element.Response.StatusCode, len(element.ResponseRaw), element.Url)
+                        res6,err6 = str.ExtractBodyFromHTTPResponseRaw(element.ResponseRaw)
+                        // res7 = json.loads(string(res6))
+                        result = {
+                            
+                            "req":string(element.RequestRaw),
+                            "res":string(res6),  //json.loads(string(res1)) 把字符串转成json
+                        } 
+                        yakit_save(result)
+                    }
+                }
+                
+            }
+            
+        }
+    }
+}

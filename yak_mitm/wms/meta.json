@@ -1,0 +1,51 @@
+{
+    "name": "wms通用并发插件",
+    "tags": [
+        ""
+    ],
+    "help": "小量并发验证业务逻辑",
+    "author": "车宗源",
+    "module_file": "yak_mitm.yak",
+    "params": [
+        {
+            "name": "fuzzurl",
+            "verbose": "fuzzurl",
+            "description": "",
+            "type": "string",
+            "default_value": "url",
+            "required": false,
+            "group": ""
+        },
+        {
+            "name": "jsonparam",
+            "verbose": "json中的某一个参数",
+            "description": "json中的某一个参数",
+            "type": "string",
+            "default_value": "a=[1,2]",
+            "required": false,
+            "group": ""
+        },
+        {
+            "name": "urlparam",
+            "verbose": "url参数",
+            "description": "拼接在url后面的某一个参数",
+            "type": "string",
+            "default_value": "a=[1,2]",
+            "required": false,
+            "group": ""
+        },
+        {
+            "name": "users",
+            "verbose": "后台登陆账号",
+            "description": "后台登陆账号,默认密码为123456；多用户时，用英文逗号\",\"隔开",
+            "type": "string",
+            "default_value": "",
+            "required": true,
+            "group": ""
+        }
+    ],
+    "document": "document.md",
+    "general_module_verbose": "",
+    "general_module_key": "",
+    "is_general_module": false
+}
