@@ -15,6 +15,6 @@ jobs:
       - name: Create update pull request
         uses: LucasRuy/sync-branch-action@v1.4.0
         with:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.test}}
           SOURCE_BRANCH: 'master'
-          DESTINATION_BRANCH: 'develop'
+          DESTINATION_BRANCH: 'main'
