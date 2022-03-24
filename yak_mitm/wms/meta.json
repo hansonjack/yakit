@@ -4,7 +4,7 @@
         ""
     ],
     "help": "小量并发验证业务逻辑",
-    "author": "车宗源",
+    "author": "che",
     "module_file": "yak_mitm.yak",
     "params": [
         {
